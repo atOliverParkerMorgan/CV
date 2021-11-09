@@ -133,24 +133,26 @@
         <canvas id="canvas2"></canvas>
         <footer>Konec..........................................?????</footer>
         <script>
-            var canvas = document.getElementById("canvas1");
-            var canvas2 = document.getElementById("canvas2");
-            var c = canvas.getContext("2d");
-            var c2 = canvas2.getContext("2d");
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight*3/4;
-            canvas2.width = window.innerWidth;
-            canvas2.height = window.innerHeight;
+
+            const canvasWithBallsElement = document.getElementById("canvas1");
+            const canvasWithCirclesElement = document.getElementById("canvas2");
+            const canvasWithBalls = canvasWithBallsElement.getContext("2d");
+            const canvasWithCircles = canvasWithCirclesElement.getContext("2d");
+
+            canvasWithBallsElement.width = window.innerWidth;
+            canvasWithBallsElement.height = window.innerHeight*3/4;
+            canvasWithCirclesElement.width = window.innerWidth;
+            canvasWithCirclesElement.height = window.innerHeight;
             window.addEventListener("resize",function(e){
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight*3/4;
-                canvas2.width = window.innerWidth;
-                canvas2.height = window.innerHeight;
+                canvasWithBallsElement.width = window.innerWidth;
+                canvasWithBallsElement.height = window.innerHeight*3/4;
+                canvasWithCirclesElement.width = window.innerWidth;
+                canvasWithCirclesElement.height = window.innerHeight;
             });
-            var parAr = [];
-            var mouse = {
-                x:undefined,
-                y:undefined
+            let parAr = [];
+            const mouse = {
+                x: undefined,
+                y: undefined
             };
 
             window.addEventListener("mousemove",function(e){
@@ -158,13 +160,10 @@
                 mouse.y = e.clientY;
             });
 
-            setInterval(function(){
-                mouse.x = undefined;
-                mouse.y = undefined;
-            },200);
+
 
             class Par{
-                constructor(x,y,size,color,weight){
+                constructor(x, y, size, color, weight){
                     this.x = x;
                     this.y = y;
                     this.size = size;
@@ -172,10 +171,11 @@
                     this.weight = weight;
                 }
                 draw(){
-                    c.beginPath();
-                    c.arc(this.x, this.y, this.size, Math.PI*2, false);
-                    c.fillStyle = this.color;
-                    c.fill();
+                    // to
+                    canvasWithBalls.beginPath();
+                    canvasWithBalls.arc(this.x, this.y, this.size, Math.PI*2, false);
+                    canvasWithBalls.fillStyle = this.color;
+                    canvasWithBalls.fill();
                 }
                 update(){
                     this.size -= 0.05;
@@ -188,17 +188,33 @@
                     this.y += this.weight;
                     this.weight += 0.2;
 
-                    if(this.y > canvas.height - this.size){
+                    if(this.y > canvasWithBallsElement.height - this.size){
                         this.weight *= -1;
                     }
+                }
+            }
+
+            class Circle{
+                constructor(x, y, color) {
+                    this.x = x
+                    this.y = y
+                    this.color = color
+                    this.age = 0
+                }
+                draw(){
+                    canvasWithCircles.beginPath();
+                    canvasWithCircles.strokeStyle = this.color;
+                    canvasWithCircles.arc(mouse.x, mouse.y, this.age, 0, Math.PI*2);
+                    canvasWithCircles.stroke();
+                    this.age++
                 }
             }
 
             function init(){
                 parAr = [];
                 for(var i = 0; i < 200; i++){
-                    var x = Math.random()*canvas.width;
-                    var y = Math.random()*canvas.height;
+                    var x = Math.random()*canvasWithBallsElement.width;
+                    var y = Math.random()*canvasWithBallsElement.height;
                     var size = Math.random()*10+2;
                     var color = "ghostwhite";
                     var weight = 1;
@@ -208,18 +224,21 @@
 
             function animation(){
                 requestAnimationFrame(animation);
-                c.clearRect(0,0,canvas.width,canvas.height);
+                canvasWithBalls.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
                 for(var i = 0; i < parAr.length; i++){
                     parAr[i].update();
                     parAr[i].draw();
                 }
-                c2.fillStyle = "rgba(10,5,20,0.01)";
-                c2.fillRect(0,0,canvas2.width,canvas2.height);
+                canvasWithCircles.fillStyle = "rgba(10,5,20,0.01)";
+                canvasWithCircles.fillRect(0,0,canvasWithCirclesElement.width,canvasWithCirclesElement.height);
 
-                c2.beginPath();
-                c2.strokeStyle = "rgb(200,200,200)";
-                c2.arc(mouse.x,mouse.y,50,Math.PI*2,false);
-                c2.stroke();
+                let c = new Circle(mouse.x, mouse.y, "rgb(0,0,0)")
+                c.draw();
+
+                // canvasWithCircles.beginPath();
+                // canvasWithCircles.strokeStyle = "rgb(200,200,200)";
+                // canvasWithCircles.arc(mouse.x,mouse.y,50,Math.PI*2,false);
+                // canvasWithCircles.stroke();
             }
             init();
             animation();
