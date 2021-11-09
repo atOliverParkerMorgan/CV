@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<!-- owner Oliver Morgan -->
+
+<html lang="cs">
+<head>
+    <!--fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@200&display=swap" rel="stylesheet">
+
+    <meta charset="UTF-8">
+    <title>Životopis - Oliver Morgan</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            color: ghostwhite;
+            font-family: monospace;
+        }
+        body{
+            background: rgb(10,5,20);
+        }
+        header{
+            position: relative;
+            display: flex;
+            width: 100%;
+            height: 75%;
+/*            background: rgb(5,0,15);*/
+/*            background: linear-gradient(to top, rgb(5,0,15) 48%, transparent);*/
+            background: linear-gradient(180deg, rgba(15,10,45,1) 0%, rgba(5,0,15,1) 100%);
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgb(5,0,15)
+        }
+        header h1{
+            position: relative;
+            z-index: 2;
+            left: 50%;
+            transform: translate(-50%,0%);
+            color: ghostwhite;
+            font-family: monospace;
+            font-size: 6vw;
+        }
+        header canvas{
+            position: absolute;
+        }
+        div{
+            position: relative;
+            z-index: 2;
+            display: inline-block;
+            background: rgb(5,5,5);
+            padding: 50px;
+            margin: 50px;
+            border-radius: 5px;
+            box-shadow: 1px 1px 4px rgb(40,0,150);
+            transition: 0.3s all linear;
+/*            max-width: 40%;*/
+        }
+        div:nth-child(2){
+            margin-top: 100px;
+        }
+        div:hover{
+            box-shadow: 2px 2px 5px rgb(140,40,250);
+        }
+
+        div:nth-child(3){
+            box-shadow: 1px 1px 4px rgb(140,0,150);
+        }
+        div:nth-child(3):hover{
+            box-shadow: 2px 2px 5px rgb(240,10,250);
+        }
+        div:nth-child(4){
+            box-shadow: 1px 1px 4px rgb(140,80,50);
+        }
+        div:nth-child(4):hover{
+            box-shadow: 2px 2px 5px rgb(240,10,150);
+        }
+        div:nth-child(5){
+            box-shadow: 1px 1px 4px rgb(10,200,100);
+        }
+        div:nth-child(5):hover{
+            box-shadow: 2px 2px 5px rgb(40,250,120);
+        }
+        div:nth-child(6){
+            box-shadow: 1px 1px 4px rgb(100,80,200);
+        }
+        div:nth-child(6):hover{
+            box-shadow: 2px 2px 5px rgb(70,100,250);
+        }
+
+        div h1{
+            padding-bottom: 25px;
+        }
+        div p{
+            font-size: 13px;
+        }
+        #canvas2{
+            position: fixed;
+            top: 0%;
+            left: 0%;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+  </head>
+    <body>
+        <header>
+            <h1>Oliver Morgan</h1>
+            <canvas id="canvas1"></canvas>
+        </header>
+        <div>
+            <h1>1.</h1>
+            <p></p>
+        </div>
+        <div>
+            <h1>2.</h1>
+            <p></p>
+        </div>
+        <div>
+            <h1>3.</h1>
+            <p></p>
+        </div>
+        <div>
+            <h1>4.</h1>
+            <p></p>
+        </div>
+        <div>
+            <h1>5.</h1>
+            <p></p>
+        </div>
+        <canvas id="canvas2"></canvas>
+        <footer>Konec..........................................?????</footer>
+        <script>
+            var canvas = document.getElementById("canvas1");
+            var canvas2 = document.getElementById("canvas2");
+            var c = canvas.getContext("2d");
+            var c2 = canvas2.getContext("2d");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight*3/4;
+            canvas2.width = window.innerWidth;
+            canvas2.height = window.innerHeight;
+            window.addEventListener("resize",function(e){
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight*3/4;
+                canvas2.width = window.innerWidth;
+                canvas2.height = window.innerHeight;
+            });
+            var parAr = [];
+            var mouse = {
+                x:undefined,
+                y:undefined
+            };
+
+            window.addEventListener("mousemove",function(e){
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            setInterval(function(){
+                mouse.x = undefined;
+                mouse.y = undefined;
+            },200);
+
+            class Par{
+                constructor(x,y,size,color,weight){
+                    this.x = x;
+                    this.y = y;
+                    this.size = size;
+                    this.color = color;
+                    this.weight = weight;
+                }
+                draw(){
+                    c.beginPath();
+                    c.arc(this.x, this.y, this.size, Math.PI*2, false);
+                    c.fillStyle = this.color;
+                    c.fill();
+                }
+                update(){
+                    this.size -= 0.05;
+                    if(this.size < 0){
+                        this.x = (mouse.x + ((Math.random()-0.5)*20));
+                        this.y = mouse.y + (Math.random()-0.5)*20;
+                        this.size = Math.random()*10 + 2;
+                        this.weight = Math.random() * 1.5;
+                    }
+                    this.y += this.weight;
+                    this.weight += 0.2;
+
+                    if(this.y > canvas.height - this.size){
+                        this.weight *= -1;
+                    }
+                }
+            }
+
+            function init(){
+                parAr = [];
+                for(var i = 0; i < 200; i++){
+                    var x = Math.random()*canvas.width;
+                    var y = Math.random()*canvas.height;
+                    var size = Math.random()*10+2;
+                    var color = "ghostwhite";
+                    var weight = 1;
+                    parAr.push(new Par(x,y,size,color,weight));
+                }
+            }
+
+            function animation(){
+                requestAnimationFrame(animation);
+                c.clearRect(0,0,canvas.width,canvas.height);
+                for(var i = 0; i < parAr.length; i++){
+                    parAr[i].update();
+                    parAr[i].draw();
+                }
+                c2.fillStyle = "rgba(10,5,20,0.01)";
+                c2.fillRect(0,0,canvas2.width,canvas2.height);
+
+                c2.beginPath();
+                c2.strokeStyle = "rgb(200,200,200)";
+                c2.arc(mouse.x,mouse.y,50,Math.PI*2,false);
+                c2.stroke();
+            }
+            init();
+            animation();
+        </script>
+    </body>
+</html>
