@@ -111,8 +111,39 @@
             <canvas id="canvas1"></canvas>
         </header>
         <div>
-            <h1>1.</h1>
-            <p></p>
+            <!--
+            <h1>PROGRAMOVÁNÍ</h1>
+            <p><b>Java</b><br>
+                - Začal jsem programovat v osmé třídě. Od té doby jsem stihl vytvořit řadu projektů v mnoho různých jazycích (viz moje projekty a github).
+                Převážně programuji v Javě, ve které jsem mimo jiné naprogramoval:
+                <a href="https://github.com/atOliverParkerMorgan/Chess_AI">šachy s umělou inteligencí</a>,
+                <a href="https://github.com/atOliverParkerMorgan/basic_neural_network">knihovnu pro neurální sítě</a>,
+                <a href="https://github.com/atOliverParkerMorgan/Tetris">tetris s umělou inteligencí</a>.
+                <br>
+                <br>
+                <b>Python</b><br>
+                - Dalé velmi dobře umím pracovat v Pythonu, s kterým jsem sestrojil např:
+                <a href="https://github.com/atOliverParkerMorgan/Snake_nn">snejka ovladného umělou inteligencí</a>.
+                Pomocí Python knihovny Django, jsem vytvořil několik webových eshopů a stránek:
+                <a href="https://www.morganbooks.eu/">morganbooks</a> - eshop mého otce,
+                <a href="https://www.limetka.art/">limetka.art</a> - eshop na zakázku,
+                <a href="https://olivermorgan.pythonanywhere.com/projects">moje životopisná stránka</a>.
+                Dokážu naprogramovat eshop či webovou stránku od počátku až do konce. Jsem schopný tvořit backend i frontend.
+                <br>
+                <br>
+                <b>Javascript</b><br>
+                - Vyznám se i v Javascriptu, díky kterému zákazníkům, kteří naštěvují mé eshopy, zajišťuji skvělý user experience.
+                <br>
+                <br>
+                <b>SQL</b><br>
+                - Mám mnoho zkušeností s databázemi, které jsem využíval pro své webové aplikace a
+                android aplikace. S projektem
+                <a href="https://github.com/atOliverParkerMorgan/SmartBag">Smartbag</a>
+                , který využívá API bakalářů a slouží studentům k přípravě tašky do školy, jsem vyhrál pražské kolo SOČ. Umím pracovat s MySQL a sqlite
+                <br>
+                <br>
+                - Programuji průměrně hodinu denně.</p>
+                -->
         </div>
         <div>
             <h1>2.</h1>
@@ -140,29 +171,39 @@
             const canvasWithCircles = canvasWithCirclesElement.getContext("2d");
 
             canvasWithBallsElement.width = window.innerWidth;
-            canvasWithBallsElement.height = window.innerHeight*3/4;
+            canvasWithBallsElement.height = window.innerHeight/7;
             canvasWithCirclesElement.width = window.innerWidth;
             canvasWithCirclesElement.height = window.innerHeight;
             window.addEventListener("resize",function(e){
                 canvasWithBallsElement.width = window.innerWidth;
-                canvasWithBallsElement.height = window.innerHeight*3/4;
+                canvasWithBallsElement.height = window.innerHeight/7;
                 canvasWithCirclesElement.width = window.innerWidth;
                 canvasWithCirclesElement.height = window.innerHeight;
             });
-            let parAr = [];
+
             const mouse = {
                 x: undefined,
                 y: undefined
             };
 
             window.addEventListener("mousemove",function(e){
+                    mouse.x = e.clientX;
+                    mouse.y = e.clientY;
+            });
+
+            window.addEventListener("mousedown",function(e){
                 mouse.x = e.clientX;
                 mouse.y = e.clientY;
+               Ball.stop = !Ball.stop;
+               Dot.getClicked(mouse.x, mouse.y)
             });
 
 
 
-            class Par{
+            class Ball{
+                static allBalls = [];
+                static stop = false
+
                 constructor(x, y, size, color, weight){
                     this.x = x;
                     this.y = y;
@@ -170,18 +211,39 @@
                     this.color = color;
                     this.weight = weight;
                 }
+                static init(){
+                    Ball.allBalls = [];
+
+                    for(let i = 0; i < 200; i++){
+                        const x = Math.random() * canvasWithBallsElement.width;
+                        const y = Math.random() * canvasWithBallsElement.height;
+                        const size = Math.random() * 10 + 2;
+                        const color = "ghostwhite";
+                        const weight = 1;
+                        Ball.allBalls.push(new Ball(x,y,size,color,weight));
+                    }
+                }
+
                 draw(){
-                    // to
+                    if (Ball.stop) {
+                        return;
+                    }
+
                     canvasWithBalls.beginPath();
-                    canvasWithBalls.arc(this.x, this.y, this.size, Math.PI*2, false);
+                    canvasWithBalls.arc(this.x, this.y, this.size, Math.PI * 2, false);
                     canvasWithBalls.fillStyle = this.color;
                     canvasWithBalls.fill();
                 }
                 update(){
+                    if (Ball.stop) {
+                        return;
+                    }
+
                     this.size -= 0.05;
                     if(this.size < 0){
-                        this.x = (mouse.x + ((Math.random()-0.5)*20));
-                        this.y = mouse.y + (Math.random()-0.5)*20;
+                        this.x = mouse.x;
+                        //this.y = mouse.y;
+                        this.y = canvasWithBallsElement.height/2
                         this.size = Math.random()*10 + 2;
                         this.weight = Math.random() * 1.5;
                     }
@@ -194,54 +256,120 @@
                 }
             }
 
-            class Circle{
+            const SMALL_SIZE = 5
+            const BIG_SIZE = 15
+            const DOT_DISTANCE = 30
+
+            class Dot {
+                static allDots = [[]];
+
+
                 constructor(x, y, color) {
                     this.x = x
                     this.y = y
                     this.color = color
-                    this.age = 0
+                    this.size = SMALL_SIZE
+
                 }
-                draw(){
+
+                static init() {
+                    let line = []
+                    Dot.allDots = [];
+                    let x = DOT_DISTANCE;
+                    let y = 0;
+                    do{
+                        x+=DOT_DISTANCE
+                        if(x>=canvasWithCirclesElement.width+DOT_DISTANCE){
+                            y += DOT_DISTANCE
+                            x = DOT_DISTANCE;
+                            Dot.allDots.push(line)
+                            line = []
+                        }
+                        line.push(new Dot(x, y, "ghostwhite"))
+
+                    }
+                    while(y<canvasWithCirclesElement.height)
+
+                }
+
+                draw() {
                     canvasWithCircles.beginPath();
-                    canvasWithCircles.strokeStyle = this.color;
-                    canvasWithCircles.arc(mouse.x, mouse.y, this.age, 0, Math.PI*2);
-                    canvasWithCircles.stroke();
-                    this.age++
-                }
-            }
+                    canvasWithCircles.fillStyle = this.color;
+                    canvasWithCircles.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    canvasWithCircles.fill();
 
-            function init(){
-                parAr = [];
-                for(var i = 0; i < 200; i++){
-                    var x = Math.random()*canvasWithBallsElement.width;
-                    var y = Math.random()*canvasWithBallsElement.height;
-                    var size = Math.random()*10+2;
-                    var color = "ghostwhite";
-                    var weight = 1;
-                    parAr.push(new Par(x,y,size,color,weight));
                 }
-            }
 
-            function animation(){
-                requestAnimationFrame(animation);
+                static getClicked(x, y){
+                    let indexX = Math.round(x/DOT_DISTANCE)-1;
+                    let indexY = Math.round(y/DOT_DISTANCE);
+                    console.log("X: "+indexX)
+                    console.log("Y: "+ indexY)
+                    Dot.allDots[indexY][indexX].makeBigger();
+
+
+                }
+
+                static wave(x, y, dot){
+
+                    let nodes = [dot]
+                    while(nodes.length>=0){
+
+
+                    }
+                }
+                makeBigger(){
+                    this.size = BIG_SIZE;
+                }
+                makeSmaller(){
+                    this.size = SMALL_SIZE;
+                }
+
+                getNeighbours(parent){
+                    let children = [];
+                    let positionOfChildren = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)];
+                    for (let i = 0; i < positionOfChildren.length; i++) {
+                        let x = this.x + positionOfChildren[i][0];
+                        let y = this.y + positionOfChildren[i][1];
+                        if(0 <= x < canvasWithBallsElement.width && 0 <= y < canvasWithBallsElement.width && !parent.isBig()){
+                            children.push(Dot.allDots[y][x])
+                        }
+
+                    }
+                    return children
+                }
+                isBig(){
+                    return this.size===BIG_SIZE;
+                }
+
+            }
+            function animateAll(){
+
+                requestAnimationFrame(animateAll);
                 canvasWithBalls.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
-                for(var i = 0; i < parAr.length; i++){
-                    parAr[i].update();
-                    parAr[i].draw();
+                canvasWithCircles.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
+
+                for (let i = 0; i < Ball.allBalls.length; i++) {
+                    Ball.allBalls[i].update();
+                    Ball.allBalls[i].draw();
                 }
+                for (let x = 0; x < Dot.allDots[0].length; x++) {
+                    for (let y = 0; y < Dot.allDots.length; y++) {
+                        Dot.allDots[y][x].draw();
+                    }
+                }
+
                 canvasWithCircles.fillStyle = "rgba(10,5,20,0.01)";
                 canvasWithCircles.fillRect(0,0,canvasWithCirclesElement.width,canvasWithCirclesElement.height);
 
-                let c = new Circle(mouse.x, mouse.y, "rgb(0,0,0)")
-                c.draw();
 
-                // canvasWithCircles.beginPath();
-                // canvasWithCircles.strokeStyle = "rgb(200,200,200)";
-                // canvasWithCircles.arc(mouse.x,mouse.y,50,Math.PI*2,false);
-                // canvasWithCircles.stroke();
+
+
             }
-            init();
-            animation();
+            Ball.init()
+            Dot.init();
+
+            animateAll();
         </script>
     </body>
 </html>
