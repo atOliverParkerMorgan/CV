@@ -97,8 +97,8 @@
         }
         #canvas2{
             position: fixed;
-            top: 0%;
-            left: 0%;
+            top: 0;
+            left: 0;
             z-index: -1;
             width: 100%;
             height: 100%;
@@ -166,19 +166,19 @@
         <script>
 
             const canvasWithBallsElement = document.getElementById("canvas1");
-            const canvasWithCirclesElement = document.getElementById("canvas2");
+            const canvasWithDotElement = document.getElementById("canvas2");
             const canvasWithBalls = canvasWithBallsElement.getContext("2d");
-            const canvasWithCircles = canvasWithCirclesElement.getContext("2d");
+            const canvasWithDot = canvasWithDotElement.getContext("2d");
 
             canvasWithBallsElement.width = window.innerWidth;
             canvasWithBallsElement.height = window.innerHeight/7;
-            canvasWithCirclesElement.width = window.innerWidth;
-            canvasWithCirclesElement.height = window.innerHeight;
-            window.addEventListener("resize",function(e){
+            canvasWithDotElement.width = window.innerWidth;
+            canvasWithDotElement.height = window.innerHeight;
+            window.addEventListener("resize",function(){
                 canvasWithBallsElement.width = window.innerWidth;
                 canvasWithBallsElement.height = window.innerHeight/7;
-                canvasWithCirclesElement.width = window.innerWidth;
-                canvasWithCirclesElement.height = window.innerHeight;
+                canvasWithDotElement.width = window.innerWidth;
+                canvasWithDotElement.height = window.innerHeight;
             });
 
             const mouse = {
@@ -192,10 +192,10 @@
             });
 
             window.addEventListener("mousedown",function(e){
-                mouse.x = e.clientX;
-                mouse.y = e.clientY;
-               Ball.stop = !Ball.stop;
-               Dot.getClicked(mouse.x, mouse.y)
+               let x = Dot.getIndexX(e.clientX);
+               let y = Dot.getIndexY(e.clientY);
+               // Ball.stop = !Ball.stop;
+               Dot.startWave(x, y)
             });
 
 
@@ -230,7 +230,7 @@
                     }
 
                     canvasWithBalls.beginPath();
-                    canvasWithBalls.arc(this.x, this.y, this.size, Math.PI * 2, false);
+                    canvasWithBalls.arc(this.x, this.y, this.size, Math.PI * 2, 0);
                     canvasWithBalls.fillStyle = this.color;
                     canvasWithBalls.fill();
                 }
@@ -259,9 +259,13 @@
             const SMALL_SIZE = 5
             const BIG_SIZE = 15
             const DOT_DISTANCE = 30
+            const NUMBER_OF_UPDATES = 5;
 
             class Dot {
                 static allDots = [[]];
+                static nodesToShow = [];
+                static nodesAreBig = true;
+                static isSolving = false;
 
 
                 constructor(x, y, color) {
@@ -275,49 +279,52 @@
                 static init() {
                     let line = []
                     Dot.allDots = [];
-                    let x = DOT_DISTANCE;
-                    let y = 0;
-                    do{
-                        x+=DOT_DISTANCE
-                        if(x>=canvasWithCirclesElement.width+DOT_DISTANCE){
-                            y += DOT_DISTANCE
-                            x = DOT_DISTANCE;
-                            Dot.allDots.push(line)
-                            line = []
-                        }
-                        line.push(new Dot(x, y, "ghostwhite"))
 
+                    for (let y = 0; y < canvasWithDotElement.height; y+=DOT_DISTANCE) {
+                        for (let x = DOT_DISTANCE; x < canvasWithDotElement.width; x+=DOT_DISTANCE) {
+                            line.push(new Dot(x, y, "ghostwhite"));
+                        }
+                        Dot.allDots.push(line)
+                        line = [];
                     }
-                    while(y<canvasWithCirclesElement.height)
 
                 }
 
                 draw() {
-                    canvasWithCircles.beginPath();
-                    canvasWithCircles.fillStyle = this.color;
-                    canvasWithCircles.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    canvasWithCircles.fill();
+                    canvasWithDot.beginPath();
+                    canvasWithDot.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    canvasWithDot.fillStyle = this.color;
+                    canvasWithDot.fill();
 
                 }
-
-                static getClicked(x, y){
-                    let indexX = Math.round(x/DOT_DISTANCE)-1;
-                    let indexY = Math.round(y/DOT_DISTANCE);
-                    console.log("X: "+indexX)
-                    console.log("Y: "+ indexY)
-                    Dot.allDots[indexY][indexX].makeBigger();
-
-
-                }
-
-                static wave(x, y, dot){
-
-                    let nodes = [dot]
-                    while(nodes.length>=0){
-
-
+                static startWave(x, y){
+                    if(!Dot.isSolving) {
+                        Dot.nodesAreBig = !Dot.nodesAreBig;
+                        Dot.isSolving = true;
+                        Dot.startingNode = Dot.allDots[y][x];
+                        Dot.nodesToShow.unshift(Dot.startingNode);
+                        Dot.startingNode.reverseSize();
                     }
+
                 }
+
+                 static showWave(){
+                    if(Dot.nodesToShow.length < 1){
+
+                        Dot.isSolving = false;
+                        return
+                    }
+
+                    let currentNode = Dot.nodesToShow.shift();
+                    let neighbours = currentNode.getNeighbours();
+
+                    for (let i = 0; i < neighbours.length; i++) {
+                        Dot.nodesToShow.push(neighbours[i]);
+                        neighbours[i].reverseSize();
+                    }
+
+                }
+
                 makeBigger(){
                     this.size = BIG_SIZE;
                 }
@@ -325,21 +332,42 @@
                     this.size = SMALL_SIZE;
                 }
 
-                getNeighbours(parent){
-                    let children = [];
-                    let positionOfChildren = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)];
+               reverseSize(){
+                    if(!this.isBig()) this.makeBigger();
+                    else this.makeSmaller();
+               }
+
+                getNeighbours(){
+                    let neighbours = [];
+                    let positionOfChildren = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+
                     for (let i = 0; i < positionOfChildren.length; i++) {
-                        let x = this.x + positionOfChildren[i][0];
-                        let y = this.y + positionOfChildren[i][1];
-                        if(0 <= x < canvasWithBallsElement.width && 0 <= y < canvasWithBallsElement.width && !parent.isBig()){
-                            children.push(Dot.allDots[y][x])
+                        let x = Dot.getIndexX(this.x) + positionOfChildren[i][0];
+                        let y = Dot.getIndexY(this.y) + positionOfChildren[i][1];
+
+                        if(0 <= x && x< Dot.allDots[0].length && 0 <= y && y <  Dot.allDots.length){
+
+                                if (!Dot.allDots[y][x].isBig()&&!Dot.nodesAreBig) {
+                                    neighbours.push(Dot.allDots[y][x])
+                                }
+                                if (Dot.allDots[y][x].isBig()&&Dot.nodesAreBig) {
+                                    neighbours.push(Dot.allDots[y][x])
+                                }
                         }
 
                     }
-                    return children
+                    return neighbours
                 }
                 isBig(){
                     return this.size===BIG_SIZE;
+                }
+
+                static getIndexX(x){
+                    return Math.round(x/DOT_DISTANCE)-1
+                }
+
+                static getIndexY(y){
+                    return Math.round(y/DOT_DISTANCE)
                 }
 
             }
@@ -347,7 +375,7 @@
 
                 requestAnimationFrame(animateAll);
                 canvasWithBalls.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
-                canvasWithCircles.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
+                canvasWithDot.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
 
                 for (let i = 0; i < Ball.allBalls.length; i++) {
                     Ball.allBalls[i].update();
@@ -358,9 +386,12 @@
                         Dot.allDots[y][x].draw();
                     }
                 }
+                for (let i = 0; i < NUMBER_OF_UPDATES ; i++) {
+                    Dot.showWave()
+                }
 
-                canvasWithCircles.fillStyle = "rgba(10,5,20,0.01)";
-                canvasWithCircles.fillRect(0,0,canvasWithCirclesElement.width,canvasWithCirclesElement.height);
+                canvasWithDot.fillStyle = "rgba(10,5,20,0.01)";
+                canvasWithDot.fillRect(0,0,canvasWithDotElement.width,canvasWithDotElement.height);
 
 
 
