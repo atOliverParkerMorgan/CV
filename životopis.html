@@ -55,10 +55,7 @@
             border-radius: 5px;
             box-shadow: 1px 1px 4px rgb(40,0,150);
             transition: 0.3s all linear;
-/*            max-width: 40%;*/
-        }
-        div:nth-child(2){
-            margin-top: 100px;
+
         }
         div:hover{
             box-shadow: 2px 2px 5px rgb(140,40,250);
@@ -106,9 +103,6 @@
             font-size: 20px;
         }
 
-        div p{
-            font-size: 20px;
-        }
         #canvas2{
             position: fixed;
             top: 0;
@@ -124,8 +118,10 @@
             <h1>Oliver Morgan</h1>
             <canvas id="canvas1"></canvas>
         </header>
-        <div style="padding: 10px">
-            <img src="https://files.fm/thumb_show.php?i=ckafksx5c" alt="Jejda, něco se pokazilo">
+
+
+        <div style="padding: 20px">
+            <img src="https://files.fm/thumb_show.php?i=zej3erx7h" alt="Jejda, něco se pokazilo">
         </div>
 
 
@@ -165,7 +161,8 @@
                 <h4>Python</h4><br>
                 <p>
                 - Dalé velmi dobře umím pracovat v Pythonu, s kterým jsem sestrojil např:
-                <a href="https://github.com/atOliverParkerMorgan/Snake_nn">snejka ovladného umělou inteligencí</a>.
+                <a href="https://github.com/atOliverParkerMorgan/Snake_nn">snejka ovladného umělou inteligencí</a>,
+                <a href="https://github.com/atOliverParkerMorgan/maze">luštič bludiště (A*, dijkstrův algoritmus, DFS)</a>.
                 Pomocí Python knihovny Django, jsem vytvořil několik webových eshopů a stránek:
                 <a href="https://www.morganbooks.eu/">morganbooks</a> - eshop mého otce,
                 <a href="https://www.limetka.art/">limetka.art</a> - eshop na zakázku,
@@ -188,8 +185,8 @@
                 <p>
                 - Mám mnoho zkušeností s databázemi, které jsem využíval pro své webové aplikace a
                 android aplikace. S projektem
-                <a href="https://github.com/atOliverParkerMorgan/SmartBag">Smartbag</a>
-                , který využívá API bakalářů a slouží studentům k přípravě tašky do školy, jsem vyhrál pražské kolo SOČ. Umím pracovat s MySQL a sqlite
+                <a href="https://github.com/atOliverParkerMorgan/SmartBag">Smartbag</a>,
+                    který využívá API bakalářů a slouží studentům k přípravě tašky do školy, jsem vyhrál pražské kolo SOČ. Umím pracovat s MySQL a sqlite
                 </p>
                 <br>
                 <br>
@@ -218,47 +215,68 @@
 
 
         <canvas id="canvas2"></canvas>
-        <footer>Konec..........................................?????</footer>
         <script>
+            /*
+            Author Oliver Morgan
+            my CV is a part of my CV :)
+            */
 
+
+            // get canvas elements
             const canvasWithBallsElement = document.getElementById("canvas1");
             const canvasWithDotElement = document.getElementById("canvas2");
+
+            // get to 2d canvas
             const canvasWithBalls = canvasWithBallsElement.getContext("2d");
             const canvasWithDot = canvasWithDotElement.getContext("2d");
 
+            // set width and height =>  canvasWithBallsElement overlaps canvasWithDotElement
             canvasWithBallsElement.width = window.innerWidth;
-            canvasWithBallsElement.height = window.innerHeight/7;
+            canvasWithBallsElement.height = window.innerHeight
             canvasWithDotElement.width = window.innerWidth;
             canvasWithDotElement.height = window.innerHeight;
             window.addEventListener("resize",function(){
+                // reset size width and height on resize
                 canvasWithBallsElement.width = window.innerWidth;
-                canvasWithBallsElement.height = window.innerHeight/7;
+                canvasWithBallsElement.height = window.innerHeight;
                 canvasWithDotElement.width = window.innerWidth;
                 canvasWithDotElement.height = window.innerHeight;
+
+                // reset dots
+                Dot.init();
             });
 
+            // mouse object
             const mouse = {
                 x: undefined,
                 y: undefined
             };
 
+            // update mouse cord on mousemove
             window.addEventListener("mousemove",function(e){
                     mouse.x = e.clientX;
                     mouse.y = e.clientY;
             });
 
+
+
             window.addEventListener("mousedown",function(e){
+               // get the position of a dot in 2d-list Dot.allDots from mouse cords
                let x = Dot.getIndexX(e.clientX);
                let y = Dot.getIndexY(e.clientY);
-               // Ball.stop = !Ball.stop;
+
+               // start wave from the dot that was selected
                Dot.startWave(x, y)
             });
 
 
 
             class Ball{
+                // contains all of the balls that are being displayed
                 static allBalls = [];
-                static stop = false
+
+                // set true if you want to hide all balls
+                static hide = false
 
                 constructor(x, y, size, color, weight){
                     this.x = x;
@@ -267,46 +285,63 @@
                     this.color = color;
                     this.weight = weight;
                 }
+
                 static init(){
                     Ball.allBalls = [];
 
+                    // initialize all balls by creating 200 balls with random positions and sized
                     for(let i = 0; i < 200; i++){
                         const x = Math.random() * canvasWithBallsElement.width;
                         const y = Math.random() * canvasWithBallsElement.height;
                         const size = Math.random() * 10 + 2;
+
                         const color = "ghostwhite";
+
+                        // weight is used to calculate bounce physics
                         const weight = 1;
+
                         Ball.allBalls.push(new Ball(x,y,size,color,weight));
                     }
                 }
 
                 draw(){
-                    if (Ball.stop) {
+
+                    if (Ball.hide) {
                         return;
                     }
 
+                    // beginPath is used to redraw colors
                     canvasWithBalls.beginPath();
+                    // draw ball
                     canvasWithBalls.arc(this.x, this.y, this.size, Math.PI * 2, 0);
+                    // set color
                     canvasWithBalls.fillStyle = this.color;
+                    // fill shape with color
                     canvasWithBalls.fill();
                 }
                 update(){
-                    if (Ball.stop) {
+                    if (Ball.hide) {
                         return;
                     }
 
+                    // bounce logic
+
+                    // make ball smaller
                     this.size -= 0.05;
                     if(this.size < 0){
+                        // if is too small create a new ball that is based on mouseX position
                         this.x = mouse.x;
-                        //this.y = mouse.y;
                         this.y = canvasWithBallsElement.height/2
                         this.size = Math.random()*10 + 2;
                         this.weight = Math.random() * 1.5;
                     }
+
+                    // gravity logic
                     this.y += this.weight;
                     this.weight += 0.2;
 
                     if(this.y > canvasWithBallsElement.height - this.size){
+                        // revers the direction if the ball "touches" the ground
                         this.weight *= -1;
                     }
                 }
@@ -318,9 +353,17 @@
             const NUMBER_OF_UPDATES = 5;
 
             class Dot {
+                // contains all dots
                 static allDots = [[]];
+
+                // used to working with dots in wave
                 static nodesToShow = [];
+
+                // are all dots currently big or small
+                // is true because Dot.startWaves() reverses value
                 static nodesAreBig = true;
+
+                // is a wave currently being solved
                 static isSolving = false;
 
 
@@ -335,6 +378,9 @@
                 static init() {
                     let line = []
                     Dot.allDots = [];
+
+                    // distribute dots evenly across canvas using DOT_DISTANCE
+                    // and save into 2d list Dot.allDots
 
                     for (let y = 0; y < canvasWithDotElement.height; y+=DOT_DISTANCE) {
                         for (let x = DOT_DISTANCE; x < canvasWithDotElement.width; x+=DOT_DISTANCE) {
@@ -357,6 +403,8 @@
                     if(!Dot.isSolving) {
                         Dot.nodesAreBig = !Dot.nodesAreBig;
                         Dot.isSolving = true;
+
+                        // set starting node
                         Dot.startingNode = Dot.allDots[y][x];
                         Dot.nodesToShow.unshift(Dot.startingNode);
                         Dot.startingNode.reverseSize();
@@ -395,17 +443,23 @@
 
                 getNeighbours(){
                     let neighbours = [];
+                    // values to add to get neighbouring dots
                     let positionOfChildren = [[0, -1], [0, 1], [-1, 0], [1, 0]];
 
                     for (let i = 0; i < positionOfChildren.length; i++) {
+                        // index x, y of neighbouring dots
                         let x = Dot.getIndexX(this.x) + positionOfChildren[i][0];
                         let y = Dot.getIndexY(this.y) + positionOfChildren[i][1];
 
+                        // does this dot exist?
                         if(0 <= x && x< Dot.allDots[0].length && 0 <= y && y <  Dot.allDots.length){
 
+                                //  Dot.nodesAreBig === true only append dots that are small
                                 if (!Dot.allDots[y][x].isBig()&&!Dot.nodesAreBig) {
                                     neighbours.push(Dot.allDots[y][x])
                                 }
+
+                                // Dot.nodesAreBig === false only append dots that are big
                                 if (Dot.allDots[y][x].isBig()&&Dot.nodesAreBig) {
                                     neighbours.push(Dot.allDots[y][x])
                                 }
@@ -428,35 +482,48 @@
 
             }
             function animateAll(){
-
+                // set this function to be update every animation frame
                 requestAnimationFrame(animateAll);
+
+                // clear canvas
                 canvasWithBalls.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
                 canvasWithDot.clearRect(0,0,canvasWithBallsElement.width,canvasWithBallsElement.height);
 
+                // update and draw allBalls
                 for (let i = 0; i < Ball.allBalls.length; i++) {
                     Ball.allBalls[i].update();
                     Ball.allBalls[i].draw();
                 }
+
+                // draw allDots
                 for (let x = 0; x < Dot.allDots[0].length; x++) {
                     for (let y = 0; y < Dot.allDots.length; y++) {
                         Dot.allDots[y][x].draw();
                     }
                 }
+
+                // run Dot.showWave() a NUMBER_OF_UPDATES per a frame
                 for (let i = 0; i < NUMBER_OF_UPDATES ; i++) {
                     Dot.showWave()
                 }
 
+                // set canvas color
                 canvasWithDot.fillStyle = "rgba(10,5,20,0.01)";
+
+                // redraw
                 canvasWithDot.fillRect(0,0,canvasWithDotElement.width,canvasWithDotElement.height);
 
 
 
 
             }
+
             Ball.init()
             Dot.init();
 
             animateAll();
+
+
         </script>
     </body>
 </html>
